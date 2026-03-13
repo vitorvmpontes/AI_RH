@@ -9,7 +9,7 @@ genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 def analyze_resume(job_description, resume_text):
     # Usando o modelo flash que é rápido e ótimo para extração de dados
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-2.5-flash')
     
     prompt = f"""
     Você é um recrutador técnico experiente. Analise o currículo abaixo em relação à descrição da vaga fornecida.
