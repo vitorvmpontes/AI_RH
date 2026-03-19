@@ -14,8 +14,8 @@ load_dotenv()
 app = FastAPI(title="AI Resume Screener API")
 
 # Configuração do Supabase
-url: str = os.environ.get("SUPABASE_URL")
-key: str = os.environ.get("SUPABASE_KEY")
+url: str = os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
+key: str = os.environ.get("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY")
 supabase: Client = create_client(url, key)
 
 # Configuração de CORS para o Next.js
