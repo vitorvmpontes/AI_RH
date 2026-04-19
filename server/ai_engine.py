@@ -1,16 +1,15 @@
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 import os
 import json
 from dotenv import load_dotenv
 
 load_dotenv()
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+# Nova forma de instanciar o cliente
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 def analyze_resume(job_description, resume_text):
-    # Usando o modelo flash que é rápido e ótimo para extração de dados
-    model = genai.GenerativeModel('gemini-2.5-flash')
-    
     prompt = f"""
     Você é um recrutador técnico experiente. Analise o currículo abaixo em relação à descrição da vaga fornecida.
     
@@ -29,9 +28,14 @@ def analyze_resume(job_description, resume_text):
     }}
     """
     
-    response = model.generate_content(
-        prompt,
-        generation_config={"response_mime_type": "application/json"}
+    # Nova sintaxe de geração
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json"
+        )
     )
     
+    # O acesso ao texto mudou levely para response.text
     return json.loads(response.text)
