@@ -59,9 +59,8 @@ async def upload_resume(
         # 5. Análise com Gemini IA
         analysis = analyze_resume(job_description, resume_text)
 
-        # 6. Salvar Candidato e Resultado da Triagem (Exemplo simplificado)
+        # 6. Salvar Candidato e Resultado da Triagem 
         # Primeiro, inserimos o candidato (ou buscamos se já existe)
-        # Nota: Em um sistema real, você extrairia o e-mail do texto para evitar duplicatas
         candidate_data = {
             "full_name": file.filename.replace(".pdf", ""), # Placeholder até extrair nome real
             "email": f"teste_{os.urandom(2).hex()}@example.com", # Placeholder
@@ -71,7 +70,6 @@ async def upload_resume(
         c_res = supabase.table("candidates").insert(candidate_data).execute()
         candidate_id = c_res.data[0]["id"]
 
-        # Agora salvamos a triagem na tabela 'screenings'
         screening_data = {
             "job_id": job_id,
             "candidate_id": candidate_id,

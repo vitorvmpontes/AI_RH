@@ -11,7 +11,6 @@ def extract_text_from_pdf(pdf_path: str) -> str:
 
         for page_num in range(len(doc)):
             page = doc.load_page(page_num)
-            # .get_text() extrai o texto mantendo uma ordem lógica
             full_text += page.get_text()
 
         doc.close()

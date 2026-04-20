@@ -113,7 +113,7 @@ export default async function JobDetailsPage({ params }: { params: { id: string 
                   score={screening.score}
                   aiSummary={screening.ai_summary}
                   matchingSkills={screening.matching_skills}
-                  missing_skills={screening.missing_skills}
+                  missingSkills={screening.missing_skills}
                 >
                   <div className="bg-white border border-gray-200 rounded-xl p-5 flex items-center justify-between hover:border-blue-400 hover:shadow-md transition-all cursor-pointer group">
                     <div className="flex items-center gap-4">

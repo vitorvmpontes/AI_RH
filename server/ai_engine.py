@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Nova forma de instanciar o cliente
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 def analyze_resume(job_description, resume_text):
@@ -28,7 +27,6 @@ def analyze_resume(job_description, resume_text):
     }}
     """
     
-    # Nova sintaxe de geração
     response = client.models.generate_content(
         model="gemini-2.5-flash",
         contents=prompt,
@@ -37,5 +35,4 @@ def analyze_resume(job_description, resume_text):
         )
     )
     
-    # O acesso ao texto mudou levely para response.text
     return json.loads(response.text)
