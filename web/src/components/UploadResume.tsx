@@ -17,8 +17,11 @@ export default function UploadResume({ jobId }: { jobId: string }) {
     formData.append('job_id', jobId);
 
     try {
+      // Usa a URL da nuvem se configurada, senão usa localhost
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      
       // Chamada para o seu Backend Python (FastAPI)
-      const response = await fetch('http://localhost:8000/upload-resume', {
+      const response = await fetch(`${apiUrl}/upload-resume`, {
         method: 'POST',
         body: formData,
       });
