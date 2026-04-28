@@ -30,7 +30,6 @@ export default async function DashboardPage() {
     <div className="min-h-screen bg-gray-50 p-6 md:p-12">
       <div className="max-w-6xl mx-auto">
         
-        {/* Header do Dashboard */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Painel de Recrutamento</h1>
