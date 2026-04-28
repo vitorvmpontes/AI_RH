@@ -34,6 +34,9 @@ jobs:
         tags: web:latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
+        build-args: |
+          NEXT_PUBLIC_SUPABASE_URL=https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=placeholder-key
 
     # Exemplo de como você faria deploy no Vercel via CLI se preferisse o GHA no lugar do push automático
     # - name: Deploy to Vercel (Optional)
