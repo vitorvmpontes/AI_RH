@@ -1,4 +1,5 @@
 import { createClient } from '@/src/utils/supabase/server';
+export const dynamic = 'force-dynamic';
 import Link from 'next/link';
 import { BriefcaseIcon, UsersIcon, ChevronRightIcon } from 'lucide-react';
 import { CreateJobModal } from '@/src/components/CreateJobModal';

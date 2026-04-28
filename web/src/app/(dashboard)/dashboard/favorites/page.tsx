@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { createClient } from '@/src/utils/supabase/server';
 import Link from 'next/link';
 import { StarIcon, UserIcon, BriefcaseIcon, ChevronRightIcon, SearchIcon } from 'lucide-react';
