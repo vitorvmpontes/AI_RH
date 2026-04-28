@@ -1,0 +1,42 @@
+
+
+services:
+  server:
+    image: airh-server
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./server:/app  # Habilita hot-reload mapeando o código local
+    env_file:
+      - .env # Certifique-se de ter um .env na raiz do projeto
+    environment:
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  web:
+    image: airh-web
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      target: dev
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./web:/app
+      - /app/node_modules
+      - /app/.next
+    env_file:
+      - .env
+    environment:
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY}
+    # Sobrescrevemos o comando para rodar em modo desenvolvimento (Hot-reload ativado)
+    command: npm run dev

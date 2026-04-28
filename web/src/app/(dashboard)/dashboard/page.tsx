@@ -1,15 +1,24 @@
 import { createClient } from '@/src/utils/supabase/server';
 import Link from 'next/link';
-import { PlusIcon, BriefcaseIcon, UsersIcon, ChevronRightIcon } from 'lucide-react';
+import { BriefcaseIcon, UsersIcon, ChevronRightIcon } from 'lucide-react';
+import { CreateJobModal } from '@/src/components/CreateJobModal';
+
+export const metadata = {
+  title: 'Dashboard',
+};
 
 export default async function DashboardPage() {
   // Inicializa o cliente do Supabase (Server Side)
   const supabase = await createClient();
   
-  // Busca as vagas ordenadas pela data de criação
+  // Obtém o usuário logado
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // Busca as vagas ordenadas pela data de criação e associadas ao usuário atual
   const { data: jobs, error } = await supabase
     .from('jobs')
     .select('*, screenings(count)')
+    .eq('user_id', user?.id)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -27,10 +36,7 @@ export default async function DashboardPage() {
             <p className="text-gray-500 mt-1">Gerencie suas vagas e analise candidatos com IA.</p>
           </div>
           
-          <button className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2.5 rounded-lg transition-all shadow-sm">
-            <PlusIcon size={20} />
-            Nova Vaga
-          </button>
+          {user && <CreateJobModal userId={user.id} />}
         </div>
 
         {/* Grid de Vagas */}

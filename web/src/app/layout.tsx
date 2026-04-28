@@ -7,6 +7,14 @@ const inter = Inter({
   variable: '--font-inter', 
 });
 
+export const metadata = {
+  title: {
+    template: '%s | AIRH',
+    default: 'AIRH - Recrutamento Inteligente',
+  },
+  description: 'Plataforma de recrutamento que analisa currículos usando Inteligência Artificial.',
+};
+
 export default function RootLayout({
   children,
 }: {

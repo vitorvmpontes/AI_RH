@@ -23,7 +23,12 @@ def analyze_resume(job_description, resume_text):
       "score": (inteiro de 0 a 100),
       "ai_summary": "um resumo de 3 frases sobre o candidato",
       "matching_skills": ["lista", "de", "habilidades", "encontradas"],
-      "missing_skills": ["lista", "de", "habilidades", "faltantes"]
+      "missing_skills": ["lista", "de", "habilidades", "faltantes"],
+      "candidate_info": {{
+        "full_name": "Nome completo do candidato (ou null se não encontrar)",
+        "email": "Email do candidato (ou null se não encontrar)",
+        "phone": "Telefone do candidato (ou null se não encontrar)"
+      }}
     }}
     """
     

@@ -60,10 +60,26 @@ async def upload_resume(
         analysis = analyze_resume(job_description, resume_text)
 
         # 6. Salvar Candidato e Resultado da Triagem 
-        # Primeiro, inserimos o candidato (ou buscamos se já existe)
+        # Extrair informações do candidato retornadas pela IA
+        candidate_info = analysis.get("candidate_info", {})
+        
+        extracted_email = candidate_info.get("email")
+        if not extracted_email or str(extracted_email).lower() == "null" or "não" in str(extracted_email).lower() or "nao" in str(extracted_email).lower():
+            extracted_email = ""
+            
+        extracted_phone = candidate_info.get("phone")
+        if not extracted_phone or str(extracted_phone).lower() == "null" or "não" in str(extracted_phone).lower() or "nao" in str(extracted_phone).lower():
+            extracted_phone = ""
+            
+        extracted_name = candidate_info.get("full_name")
+        if not extracted_name or str(extracted_name).lower() == "null" or "não" in str(extracted_name).lower() or "nao" in str(extracted_name).lower():
+            extracted_name = file.filename.replace(".pdf", "")
+
+        # Inserimos o candidato
         candidate_data = {
-            "full_name": file.filename.replace(".pdf", ""), # Placeholder até extrair nome real
-            "email": f"teste_{os.urandom(2).hex()}@example.com", # Placeholder
+            "full_name": extracted_name,
+            "email": extracted_email,
+            "phone": extracted_phone,
             "raw_text": resume_text
         }
         

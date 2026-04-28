@@ -1,6 +1,7 @@
 import { createClient } from '@/src/utils/supabase/server';
 import UploadResume from '@/src/components/UploadResume';
 import CandidateDetailsModal from '@/src/components/CandidateDetailsModal';
+import DeleteJobButton from '@/src/components/DeleteJobButton';
 import { 
   ArrowLeft, 
   UserIcon, 
@@ -28,10 +29,12 @@ export default async function JobDetailsPage({ params }: { params: { id: string 
         ai_summary,
         matching_skills,
         missing_skills,
+        is_favorite,
         created_at,
         candidates (
           full_name,
           email,
+          phone,
           resume_url
         )
       )
@@ -74,8 +77,13 @@ export default async function JobDetailsPage({ params }: { params: { id: string 
               </div>
             </div>
             
-            <div className="flex items-center gap-3">
-              <UploadResume jobId={id} />
+            <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto mt-4 md:mt-0">
+              <div className="w-full sm:w-auto">
+                <UploadResume jobId={id} />
+              </div>
+              <div className="w-full sm:w-auto">
+                <DeleteJobButton jobId={id} />
+              </div>
             </div>
           </div>
         </div>
@@ -109,8 +117,12 @@ export default async function JobDetailsPage({ params }: { params: { id: string 
               {sortedScreenings?.map((screening: any) => (
                 <CandidateDetailsModal
                   key={screening.id}
+                  screeningId={screening.id}
                   candidateName={screening.candidates?.full_name}
+                  candidateEmail={screening.candidates?.email}
+                  candidatePhone={screening.candidates?.phone}
                   score={screening.score}
+                  isFavorite={screening.is_favorite}
                   aiSummary={screening.ai_summary}
                   matchingSkills={screening.matching_skills}
                   missingSkills={screening.missing_skills}
