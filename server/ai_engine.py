@@ -31,13 +31,19 @@ def analyze_resume(job_description, resume_text):
       }}
     }}
     """
+    model_name = "gemini-2.5-flash"
+    print(f"Usando modelo: {model_name}")
     
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json"
+    try:
+        response = client.models.generate_content(
+            model=model_name,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json"
+            )
         )
-    )
-    
-    return json.loads(response.text)
+        print("Resposta recebida da Google GenAI.")
+        return json.loads(response.text)
+    except Exception as ai_err:
+        print(f"Erro na chamada do Gemini: {str(ai_err)}")
+        raise ai_err

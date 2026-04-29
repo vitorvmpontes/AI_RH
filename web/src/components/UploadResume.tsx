@@ -17,10 +17,9 @@ export default function UploadResume({ jobId }: { jobId: string }) {
     formData.append('job_id', jobId);
 
     try {
-      
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      console.log(`Tentando chamar API em: ${apiUrl}/upload-resume`);
       
-      // Chamada para o seu Backend Python (FastAPI)
       const response = await fetch(`${apiUrl}/upload-resume`, {
         method: 'POST',
         body: formData,
@@ -28,13 +27,21 @@ export default function UploadResume({ jobId }: { jobId: string }) {
 
       if (response.ok) {
         alert("Currículo analisado com sucesso!");
-        window.location.reload(); // Recarrega para mostrar o novo candidato na lista
+        window.location.reload();
       } else {
-        alert("Erro ao processar currículo.");
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Erro da API:", errorData);
+        alert(`Erro ao processar currículo: ${errorData.detail || 'Erro interno no servidor'}`);
       }
     } catch (error) {
-      console.error("Erro:", error);
-      alert("Certifique-se de que o servidor Python está rodando!");
+      console.error("Erro de conexão:", error);
+      
+      const isLocalhost = (process.env.NEXT_PUBLIC_API_URL || '').includes('localhost');
+      if (isLocalhost && window.location.hostname !== 'localhost') {
+        alert("Erro de configuração: O frontend está tentando conectar ao localhost, mas você está em produção. Verifique a variável NEXT_PUBLIC_API_URL na Vercel.");
+      } else {
+        alert("Erro de conexão: Certifique-se de que o servidor Python está rodando e acessível!");
+      }
     } finally {
       setUploading(false);
     }

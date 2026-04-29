@@ -51,30 +51,34 @@ async def upload_resume(
         shutil.copyfileobj(file.file, buffer)
 
     try:
+        print(f"--- Iniciando processamento de currículo: {file.filename} ---")
         # 4. Extração de texto
         resume_text = extract_text_from_pdf(temp_path)
         if not resume_text:
+            print("Erro: Falha ao extrair texto do PDF")
             raise HTTPException(status_code=500, detail="Falha ao extrair texto do currículo.")
 
         # 5. Análise com Gemini IA
+        print("Enviando para análise da IA...")
         analysis = analyze_resume(job_description, resume_text)
+        print("Análise da IA concluída.")
 
         # 6. Salvar Candidato e Resultado da Triagem 
-        # Extrair informações do candidato retornadas pela IA
         candidate_info = analysis.get("candidate_info", {})
         
         extracted_email = candidate_info.get("email")
-        if not extracted_email or str(extracted_email).lower() == "null" or "não" in str(extracted_email).lower() or "nao" in str(extracted_email).lower():
+        if not extracted_email or str(extracted_email).lower() in ["null", "none", "n/a", "não informado"]:
             extracted_email = ""
             
         extracted_phone = candidate_info.get("phone")
-        if not extracted_phone or str(extracted_phone).lower() == "null" or "não" in str(extracted_phone).lower() or "nao" in str(extracted_phone).lower():
+        if not extracted_phone or str(extracted_phone).lower() in ["null", "none", "n/a", "não informado"]:
             extracted_phone = ""
             
         extracted_name = candidate_info.get("full_name")
-        if not extracted_name or str(extracted_name).lower() == "null" or "não" in str(extracted_name).lower() or "nao" in str(extracted_name).lower():
+        if not extracted_name or str(extracted_name).lower() in ["null", "none", "n/a", "não informado"]:
             extracted_name = file.filename.replace(".pdf", "")
 
+        print(f"Salvando candidato: {extracted_name} ({extracted_email})")
         # Inserimos o candidato
         candidate_data = {
             "full_name": extracted_name,
@@ -83,9 +87,22 @@ async def upload_resume(
             "raw_text": resume_text
         }
         
-        c_res = supabase.table("candidates").insert(candidate_data).execute()
-        candidate_id = c_res.data[0]["id"]
+        try:
+            c_res = supabase.table("candidates").insert(candidate_data).execute()
+            candidate_id = c_res.data[0]["id"]
+        except Exception as db_err:
+            print(f"Erro ao inserir candidato no banco: {db_err}")
+            # Tentar buscar se o candidato já existe por email (se o erro for de unicidade)
+            if extracted_email:
+                existing = supabase.table("candidates").select("id").eq("email", extracted_email).execute()
+                if existing.data:
+                    candidate_id = existing.data[0]["id"]
+                else:
+                    raise HTTPException(status_code=500, detail="Erro ao salvar candidato no banco de dados.")
+            else:
+                raise HTTPException(status_code=500, detail="Erro ao salvar candidato no banco de dados.")
 
+        print(f"Candidato ID: {candidate_id}. Salvando resultado da triagem...")
         screening_data = {
             "job_id": job_id,
             "candidate_id": candidate_id,
@@ -97,6 +114,7 @@ async def upload_resume(
         }
         
         supabase.table("screenings").insert(screening_data).execute()
+        print("Processamento finalizado com sucesso.")
 
         return {
             "status": "success",
@@ -104,9 +122,13 @@ async def upload_resume(
             "analysis": analysis
         }
 
+    except HTTPException as http_exc:
+        raise http_exc
     except Exception as e:
-        print(f"Erro no processamento: {e}")
-        raise HTTPException(status_code=500, detail="Erro interno no processamento da IA.")
+        print(f"Erro CRÍTICO no processamento: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Erro interno no servidor: {str(e)}")
     
     finally:
         if os.path.exists(temp_path):
