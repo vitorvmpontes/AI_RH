@@ -7,6 +7,7 @@ import { Button } from '@/src/components/ui/button';
 import { Input } from '@/src/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/src/components/ui/card';
 import { Loader2, Mail, Lock } from 'lucide-react';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -74,6 +75,12 @@ export default function LoginPage() {
               {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Entrar'}
             </Button>
           </form>
+          <div className="mt-6 text-center text-sm text-gray-600">
+            Ainda não tem conta?{' '}
+            <Link href="/register" className="text-blue-600 font-bold hover:underline">
+              Cadastre-se grátis
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>

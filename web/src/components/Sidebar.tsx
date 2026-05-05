@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { BriefcaseIcon, StarIcon, BrainCircuit, Menu, X } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { BriefcaseIcon, StarIcon, BrainCircuit, Menu, X, LogOut, Loader2 } from 'lucide-react';
+import { createClient } from '@/src/utils/supabase/client';
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -23,6 +24,17 @@ export default function Sidebar() {
       active: pathname === '/dashboard/favorites'
     }
   ];
+
+  const router = useRouter();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const supabase = createClient();
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    await supabase.auth.signOut();
+    router.push('/login');
+    router.refresh();
+  };
 
   const SidebarContent = () => (
     <>
@@ -64,7 +76,7 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="p-4 border-t border-gray-100">
+      <div className="p-4 border-t border-gray-100 space-y-3">
         <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-5 border border-gray-200 shadow-inner">
           <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-1">Status</p>
           <p className="text-sm text-gray-800 font-bold mb-3">Triagem de IA Ativa.</p>
@@ -72,6 +84,15 @@ export default function Sidebar() {
             Ver Limites
           </button>
         </div>
+
+        <button 
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-all font-semibold text-sm disabled:opacity-50"
+        >
+          {isLoggingOut ? <Loader2 size={18} className="animate-spin" /> : <LogOut size={18} />}
+          Sair da Conta
+        </button>
       </div>
     </>
   );

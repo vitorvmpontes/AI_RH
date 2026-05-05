@@ -1,4 +1,5 @@
 import { createClient } from '@/src/utils/supabase/server';
+export const dynamic = 'force-dynamic';
 import UploadResume from '@/src/components/UploadResume';
 import CandidateDetailsModal from '@/src/components/CandidateDetailsModal';
 import DeleteJobButton from '@/src/components/DeleteJobButton';
@@ -13,36 +14,21 @@ import {
 import Link from 'next/link';
 import { Badge } from "@/src/components/ui/badge";
 
-export default async function JobDetailsPage({ params }: { params: { id: string } }) {
+export default async function JobDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   // No Next.js 15, params deve ser aguardado
   const { id } = await params;
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  // Busca a vaga e todos os candidatos que já passaram pela triagem da IA
-  const { data: job, error } = await supabase
+  // 1. Busca os detalhes da vaga
+  const { data: job, error: jobError } = await supabase
     .from('jobs')
-    .select(`
-      *,
-      screenings (
-        id,
-        score,
-        ai_summary,
-        matching_skills,
-        missing_skills,
-        is_favorite,
-        created_at,
-        candidates (
-          full_name,
-          email,
-          phone,
-          resume_url
-        )
-      )
-    `)
+    .select('*')
     .eq('id', id)
     .single();
 
-  if (error || !job) {
+  if (jobError || !job) {
+    console.error("Erro ao buscar vaga:", jobError);
     return (
       <div className="p-20 text-center">
         <h1 className="text-2xl font-bold">Vaga não encontrada</h1>
@@ -51,8 +37,37 @@ export default async function JobDetailsPage({ params }: { params: { id: string 
     );
   }
 
+  // 2. Busca os screenings (triagens) separadamente, similar à página de favoritos
+  const { data: screenings, error: screeningsError } = await supabase
+    .from('screenings')
+    .select(`
+      id,
+      score,
+      ai_summary,
+      matching_skills,
+      missing_skills,
+      is_favorite,
+      created_at,
+      candidates (
+        full_name,
+        email,
+        phone,
+        resume_url
+      ),
+      jobs!inner (
+        user_id
+      )
+    `)
+    .eq('job_id', id)
+    .eq('jobs.user_id', user?.id);
+
+  if (screeningsError) {
+    console.error("Erro ao buscar triagens:", screeningsError);
+  }
+
   // Ordenar candidatos pelo score (do maior para o menor)
-  const sortedScreenings = job.screenings?.sort((a: any, b: any) => b.score - a.score);
+  const screeningsArray = screenings || [];
+  const sortedScreenings = [...screeningsArray].sort((a: any, b: any) => (b.score || 0) - (a.score || 0));
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] pb-20">
@@ -108,56 +123,67 @@ export default async function JobDetailsPage({ params }: { params: { id: string 
               <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                 Candidatos Triados 
                 <span className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded-full">
-                  {job.screenings?.length || 0}
+                  {screeningsArray.length}
                 </span>
               </h2>
             </div>
 
             <div className="space-y-3">
-              {sortedScreenings?.map((screening: any) => (
-                <CandidateDetailsModal
-                  key={screening.id}
-                  screeningId={screening.id}
-                  candidateName={screening.candidates?.full_name}
-                  candidateEmail={screening.candidates?.email}
-                  candidatePhone={screening.candidates?.phone}
-                  score={screening.score}
-                  isFavorite={screening.is_favorite}
-                  aiSummary={screening.ai_summary}
-                  matchingSkills={screening.matching_skills}
-                  missingSkills={screening.missing_skills}
-                >
-                  <div className="bg-white border border-gray-200 rounded-xl p-5 flex items-center justify-between hover:border-blue-400 hover:shadow-md transition-all cursor-pointer group">
-                    <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors">
-                        <UserIcon size={24} />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                          {screening.candidates?.full_name}
-                        </h4>
-                        <p className="text-sm text-gray-500">{screening.candidates?.email}</p>
-                      </div>
-                    </div>
+              {sortedScreenings.map((screening: any) => {
+                // O Supabase pode retornar 'candidates' como objeto ou array de 1 elemento
+                const candidate = Array.isArray(screening.candidates) 
+                  ? screening.candidates[0] 
+                  : screening.candidates;
+                
+                const candidateName = candidate?.full_name || "Candidato sem nome";
+                const candidateEmail = candidate?.email || "";
+                const candidatePhone = candidate?.phone || "";
 
-                    <div className="flex items-center gap-8">
-                      <div className="text-right">
-                        <span className={`text-2xl font-black ${
-                          screening.score >= 80 ? 'text-green-600' : 
-                          screening.score >= 50 ? 'text-orange-500' : 'text-red-500'
-                        }`}>
-                          {screening.score}%
-                        </span>
-                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Match</p>
+                return (
+                  <CandidateDetailsModal
+                    key={screening.id}
+                    screeningId={screening.id}
+                    candidateName={candidateName}
+                    candidateEmail={candidateEmail}
+                    candidatePhone={candidatePhone}
+                    score={screening.score}
+                    isFavorite={screening.is_favorite}
+                    aiSummary={screening.ai_summary}
+                    matchingSkills={screening.matching_skills}
+                    missingSkills={screening.missing_skills}
+                  >
+                    <div className="bg-white border border-gray-200 rounded-xl p-5 flex items-center justify-between hover:border-blue-400 hover:shadow-md transition-all cursor-pointer group">
+                      <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors">
+                          <UserIcon size={24} />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                            {candidateName}
+                          </h4>
+                          <p className="text-sm text-gray-500">{candidateEmail}</p>
+                        </div>
                       </div>
-                      <ChevronRight className="text-gray-300 group-hover:text-blue-500 transition-all" size={20} />
+
+                      <div className="flex items-center gap-8">
+                        <div className="text-right">
+                          <span className={`text-2xl font-black ${
+                            screening.score >= 80 ? 'text-green-600' : 
+                            screening.score >= 50 ? 'text-orange-500' : 'text-red-500'
+                          }`}>
+                            {screening.score}%
+                          </span>
+                          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Match</p>
+                        </div>
+                        <ChevronRight className="text-gray-300 group-hover:text-blue-500 transition-all" size={20} />
+                      </div>
                     </div>
-                  </div>
-                </CandidateDetailsModal>
-              ))}
+                  </CandidateDetailsModal>
+                );
+              })}
 
               {/* Estado Vazio */}
-              {job.screenings?.length === 0 && (
+              {screeningsArray.length === 0 && (
                 <div className="text-center py-20 bg-gray-50 border-2 border-dashed rounded-2xl">
                   <SearchIcon className="mx-auto text-gray-300 mb-3" size={40} />
                   <p className="text-gray-500">Nenhum currículo enviado para esta vaga.</p>
