@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from "@/src/components/ui/badge";
+import JobStatusToggle from '@/src/components/JobStatusToggle';
 
 export default async function JobDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   // No Next.js 15, params deve ser aguardado
@@ -36,6 +37,11 @@ export default async function JobDetailsPage({ params }: { params: Promise<{ id:
       </div>
     );
   }
+
+  const isActive = job.is_active !== false;
+
+  // 2. Busca os screenings (triagens) separadamente, similar à página de favoritos
+  // ... resto do código mantido ...
 
   // 2. Busca os screenings (triagens) separadamente, similar à página de favoritos
   const { data: screenings, error: screeningsError } = await supabase
@@ -81,20 +87,27 @@ export default async function JobDetailsPage({ params }: { params: Promise<{ id:
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                <div className={`p-2 rounded-lg ${isActive ? 'bg-blue-50 text-blue-600' : 'bg-gray-100 text-gray-400'}`}>
                   <BriefcaseIcon size={20} />
                 </div>
-                <Badge variant="outline" className="text-blue-600 border-blue-200 bg-blue-50">Vaga Aberta</Badge>
+                <Badge variant="outline" className={`border-2 ${
+                  isActive 
+                    ? 'text-blue-600 border-blue-100 bg-blue-50' 
+                    : 'text-gray-500 border-gray-100 bg-gray-50'
+                }`}>
+                  {isActive ? 'Vaga Aberta' : 'Vaga Pausada'}
+                </Badge>
               </div>
-              <h1 className="text-3xl font-bold text-gray-900">{job.title}</h1>
+              <h1 className={`text-3xl font-bold ${isActive ? 'text-gray-900' : 'text-gray-500'}`}>{job.title}</h1>
               <div className="flex items-center gap-4 mt-2 text-gray-500 text-sm">
                 <span className="flex items-center gap-1.5"><CalendarIcon size={14} /> Criada em {new Date(job.created_at).toLocaleDateString('pt-BR')}</span>
               </div>
             </div>
             
             <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto mt-4 md:mt-0">
+              <JobStatusToggle jobId={id} initialStatus={isActive} />
               <div className="w-full sm:w-auto">
-                <UploadResume jobId={id} />
+                <UploadResume jobId={id} disabled={!isActive} />
               </div>
               <div className="w-full sm:w-auto">
                 <DeleteJobButton jobId={id} />

@@ -3,10 +3,11 @@
 import { useState } from 'react';
 import { UploadIcon, Loader2 } from 'lucide-react';
 
-export default function UploadResume({ jobId }: { jobId: string }) {
+export default function UploadResume({ jobId, disabled = false }: { jobId: string, disabled?: boolean }) {
   const [uploading, setUploading] = useState(false);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (disabled) return;
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -50,19 +51,20 @@ export default function UploadResume({ jobId }: { jobId: string }) {
   return (
     <div className="flex items-center gap-4">
       <label className={`
-        flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-all
-        ${uploading ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700 text-white'}
+        flex items-center gap-2 px-4 py-2 rounded-lg transition-all
+        ${disabled ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200' : 
+          uploading ? 'bg-gray-400 cursor-wait text-white' : 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer shadow-sm'}
       `}>
         {uploading ? <Loader2 className="animate-spin" size={20} /> : <UploadIcon size={20} />}
-        {uploading ? 'Analisando com IA...' : 'Subir Currículo (PDF)'}
+        {disabled ? 'Vaga Pausada' : uploading ? 'Analisando com IA...' : 'Subir Currículo (PDF)'}
         <input 
           type="file" 
           className="hidden" 
           accept=".pdf" 
           onChange={handleUpload} 
-          disabled={uploading}
+          disabled={uploading || disabled}
         />
       </label>
     </div>
   );
-}
+}

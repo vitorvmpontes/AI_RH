@@ -51,15 +51,21 @@ export default async function DashboardPage() {
               <div className="absolute top-0 left-0 w-1 h-full bg-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
               
               <div className="flex items-start justify-between mb-4">
-                <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
+                <div className={`p-2 rounded-lg ${job.is_active !== false ? 'bg-blue-50 text-blue-600' : 'bg-gray-100 text-gray-400'}`}>
                   <BriefcaseIcon size={24} />
                 </div>
-                <span className="text-xs font-medium bg-green-100 text-green-700 px-2.5 py-1 rounded-full">
-                  Ativa
+                <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
+                  job.is_active !== false 
+                    ? 'bg-green-100 text-green-700' 
+                    : 'bg-gray-100 text-gray-600'
+                }`}>
+                  {job.is_active !== false ? 'Ativa' : 'Pausada'}
                 </span>
               </div>
 
-              <h3 className="text-xl font-bold text-gray-850 group-hover:text-blue-600 transition-colors">
+              <h3 className={`text-xl font-bold transition-colors ${
+                job.is_active !== false ? 'text-gray-900 group-hover:text-blue-600' : 'text-gray-500'
+              }`}>
                 {job.title}
               </h3>
               
