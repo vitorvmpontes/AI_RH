@@ -88,19 +88,17 @@ async def upload_resume(
         }
         
         try:
-            c_res = supabase.table("candidates").insert(candidate_data).execute()
+            # Usamos upsert para o candidato baseado no email (se houver)
+            # Isso permite atualizar informações se o mesmo candidato enviar um novo currículo
+            if extracted_email:
+                c_res = supabase.table("candidates").upsert(candidate_data, on_conflict="email").execute()
+            else:
+                c_res = supabase.table("candidates").insert(candidate_data).execute()
+            
             candidate_id = c_res.data[0]["id"]
         except Exception as db_err:
-            print(f"Erro ao inserir candidato no banco: {db_err}")
-            # Tentar buscar se o candidato já existe por email (se o erro for de unicidade)
-            if extracted_email:
-                existing = supabase.table("candidates").select("id").eq("email", extracted_email).execute()
-                if existing.data:
-                    candidate_id = existing.data[0]["id"]
-                else:
-                    raise HTTPException(status_code=500, detail="Erro ao salvar candidato no banco de dados.")
-            else:
-                raise HTTPException(status_code=500, detail="Erro ao salvar candidato no banco de dados.")
+            print(f"Erro ao processar candidato no banco: {db_err}")
+            raise HTTPException(status_code=500, detail="Erro ao salvar candidato no banco de dados.")
 
         print(f"Candidato ID: {candidate_id}. Salvando resultado da triagem...")
         screening_data = {
@@ -113,7 +111,8 @@ async def upload_resume(
             "status": "completed"
         }
         
-        supabase.table("screenings").insert(screening_data).execute()
+        # Usamos upsert para evitar erro de duplicidade se o candidato já foi triado para esta vaga
+        supabase.table("screenings").upsert(screening_data, on_conflict="job_id,candidate_id").execute()
         print("Processamento finalizado com sucesso.")
 
         return {
